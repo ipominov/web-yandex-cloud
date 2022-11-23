@@ -1,0 +1,115 @@
+---
+
+- name: install soft
+  dnf:
+    name: 
+      - 'http://rpm.ipominov.ru/rpm/golang-github-prometheus-node_exporter-0.18.1-6.el7.x86_64.rpm'
+    state: present
+    disable_gpg_check: yes
+  
+- name: Add user for prometheus
+  user:
+    name: prometheus
+    shell: /bin/false
+    create_home: no
+
+- name: Create a prometheus config dir
+  file:
+    path: /etc/prometheus
+    state: directory
+    mode: '0755'
+    owner: prometheus
+
+- name: Create a prometheus app dir
+  file:
+    path: /var/lib/prometheus
+    state: directory
+    mode: '0755'
+    owner: prometheus
+
+- name: cnf template
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: '0644'
+
+- name: Check if prometheus in already downloded
+  stat:
+    path: /tmp/prometheus-2.35.0.linux-amd64
+  register: dnl_pr_dir
+
+- name: Download and unpack Prometheus
+  unarchive:
+    src: https://github.com/prometheus/prometheus/releases/download/v2.35.0/prometheus-2.35.0.linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+  when: not dnl_pr_dir.stat.exists
+
+- name: Copy prometheus bin
+  copy:
+    src: /tmp/prometheus-2.35.0.linux-amd64/prometheus
+    dest: /usr/local/bin/
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy promtool bin
+  copy:
+    src: /tmp/prometheus-2.35.0.linux-amd64/promtool
+    dest: /usr/local/bin/
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy some prometheus files
+  copy:
+    src: /tmp/prometheus-2.35.0.linux-amd64/consoles
+    dest: /etc/prometheus/
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy some prometheus files
+  copy:
+    src: /tmp/prometheus-2.35.0.linux-amd64/console_libraries
+    dest: /etc/prometheus/
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: put prometheus systemd unit
+  copy:
+    src: files/prometheus/prometheus.service
+    dest: /etc/systemd/system/
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+
+- name: reload systemd units
+  systemd:
+    daemon_reload: yes
+
+- name: open prometheus port
+  firewalld:
+    port: "{{ item }}"
+    immediate: yes
+    permanent: true
+    state: enabled
+  loop:
+    - 9090/tcp
+    - 9100/tcp
+
+- name: start and enable services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - prometheus
+    - node_exporter

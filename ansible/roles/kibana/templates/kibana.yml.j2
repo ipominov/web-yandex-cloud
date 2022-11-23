@@ -1,0 +1,17 @@
+server.host: "{{ ansible_default_ipv4.address }}"
+server.name: "kibana"
+elasticsearch.hosts: ["http://{{ hostvars['elastic1']['ansible_eth0']['ipv4']['address'] }}:9200"]
+
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: /var/log/kibana/kibana.log
+      layout:
+        type: json
+  root:
+    appenders:
+      - default
+      - file
+
+pid.file: /run/kibana/kibana.pid

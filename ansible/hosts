@@ -1,0 +1,23 @@
+[bastion]
+bastion1    ansible_host=------ ansible_user="deploy"
+[nginx]
+nginx1      ansible_host=------ ansible_user="deploy"
+nginx2      ansible_host=------ ansible_user="deploy"
+[elastic]
+elastic1    ansible_host=------ ansible_user="deploy"
+[kibana]
+kibana1     ansible_host=------ ansible_user="deploy"
+[prometheus]
+prometheus1 ansible_host=------ ansible_user="deploy"
+[grafana]
+grafana1    ansible_host=------ ansible_user="deploy"
+
+[yandex:vars]
+ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q deploy@------"'
+
+[yandex:children]
+nginx
+elastic
+kibana
+prometheus
+grafana

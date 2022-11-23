@@ -1,0 +1,13 @@
+---
+
+- hosts: prometheus
+  name: Gather facts from elastic
+  tasks: [ ]
+
+- hosts: grafana
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - grafana

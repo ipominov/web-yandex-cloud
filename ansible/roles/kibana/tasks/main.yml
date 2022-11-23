@@ -1,0 +1,25 @@
+---
+
+- name: install kibana from rpm
+  dnf:
+    name: 'http://rpm.ipominov.ru/rpm/kibana-8.4.1-x86_64.rpm'
+    disable_gpg_check: yes
+    state: present
+
+- name: make kibana config from template
+  template:
+    src: kibana.yml.j2
+    dest: /etc/kibana/kibana.yml
+
+- name: open kibana port
+  firewalld:
+    port: 5601/tcp
+    immediate: yes
+    permanent: true
+    state: enabled
+
+- name: start kibana
+  systemd:
+    name: kibana
+    state: started
+    enabled: yes

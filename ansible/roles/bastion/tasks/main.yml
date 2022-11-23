@@ -1,0 +1,40 @@
+---
+
+- name: copy ssh config
+  copy: src=files/ssh/sshd_config dest=/etc/ssh/sshd_config
+
+- name: restart sshd every time
+  systemd:
+    name: "sshd"
+    state: restarted
+
+- name: install some soft
+  dnf:
+    name: haproxy
+    state: present
+
+- name: make haproxy config from template
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: start haproxy
+  systemd:
+    name: haproxy
+    state: started
+    enabled: yes
+
+- name: open ports
+  firewalld:
+    port: "{{ item }}"
+    immediate: yes
+    permanent: true
+    state: enabled
+  loop:
+    - 22/tcp
+    - 81/tcp
+    - 82/tcp
+    - 83/tcp

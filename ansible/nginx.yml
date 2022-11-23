@@ -1,0 +1,13 @@
+---
+
+- hosts: elastic
+  name: Gather facts from elastic
+  tasks: [ ]
+
+- hosts: nginx
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - nginx

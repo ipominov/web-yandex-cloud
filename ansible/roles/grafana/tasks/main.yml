@@ -1,0 +1,20 @@
+---
+
+- name: Install grafana
+  dnf:
+    name: 'http://rpm.ipominov.ru/rpm/grafana-9.2.3-1.x86_64.rpm'
+    disable_gpg_check: yes
+    state: present
+   
+- name: open grafana port
+  firewalld:
+    port: 3000/tcp
+    immediate: yes
+    permanent: true
+    state: enabled
+
+- name: start grafana service
+  systemd:
+    name: grafana-server
+    state: started
+    enabled: yes

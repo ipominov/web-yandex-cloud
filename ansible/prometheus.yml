@@ -1,0 +1,13 @@
+---
+
+- hosts: nginx
+  name: Gather facts from nginx
+  tasks: [ ]
+
+- hosts: prometheus
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - prometheus

@@ -1,0 +1,102 @@
+global
+    
+    log         127.0.0.1 local2
+
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+    # utilize system-wide crypto-policies
+    ssl-default-bind-ciphers PROFILE=SYSTEM
+    ssl-default-server-ciphers PROFILE=SYSTEM
+
+    userlist main
+      user netology password $5$2jaK2uDaMdFxcTuV$c6z4v4ye5Wci2j89CKQ4WmRKm66EALJAoWHl9.Xm86C
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+
+#---------------------------------------------------------------------
+# main frontend which proxys to the backends
+#---------------------------------------------------------------------
+
+frontend kibana-in
+  acl auth_ok http_auth(main)
+  bind :81 
+  http-request auth unless auth_ok
+  reqadd X-Forwarded-Proto:\ http
+  default_backend kibana
+  
+frontend prometheus-in
+  acl auth_ok http_auth(main)
+  bind :82 
+  http-request auth unless auth_ok
+  reqadd X-Forwarded-Proto:\ http
+  default_backend prometheus
+
+frontend grafana-in
+  acl auth_ok http_auth(main)
+  bind :83 
+  http-request auth unless auth_ok
+  reqadd X-Forwarded-Proto:\ http
+  default_backend grafana
+
+#---------------------------------------------------------------------
+# static backend for serving up images, stylesheets and such
+#---------------------------------------------------------------------
+backend static
+    balance     roundrobin
+    server      static 127.0.0.1:4331 check
+
+#---------------------------------------------------------------------
+# round robin balancing between the various backends
+#---------------------------------------------------------------------
+
+backend kibana
+  balance roundrobin
+  option redispatch
+  option forwardfor
+  option httpchk GET /
+  http-request del-header Authorization
+  server kibana1 {{ hostvars['kibana1']['ansible_eth0']['ipv4']['address'] }}:5601 weight 100 maxconn 80000 check inter 10s verify none
+  
+backend prometheus
+  balance roundrobin
+  option redispatch
+  option forwardfor
+  option httpchk GET /
+  http-request del-header Authorization
+  server prometheus1 {{ hostvars['prometheus1']['ansible_eth0']['ipv4']['address'] }}:9090 weight 100 maxconn 80000 check inter 10s verify none
+
+backend grafana
+  balance roundrobin
+  option redispatch
+  option forwardfor
+  option httpchk GET /
+  http-request del-header Authorization
+  server grafana1 {{ hostvars['grafana1']['ansible_eth0']['ipv4']['address'] }}:3000 weight 100 maxconn 80000 check inter 10s verify none

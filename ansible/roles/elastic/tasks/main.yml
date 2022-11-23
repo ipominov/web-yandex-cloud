@@ -1,0 +1,38 @@
+---
+
+- name: Install elasticsearch and logstash from rpms
+  dnf:
+    name: 
+      - 'http://rpm.ipominov.ru/rpm/elasticsearch-8.4.1-x86_64.rpm'
+      - 'http://rpm.ipominov.ru/rpm/logstash-8.4.1-x86_64.rpm'
+    state: present
+    disable_gpg_check: yes    
+
+- name: Replace elasticsearch config
+  copy: src=files/elasticsearch/elasticsearch.yml dest=/etc/elasticsearch/
+
+- name: Replace logstash config
+  copy: src=files/logstash/logstash.yml dest=/etc/logstash/
+
+- name: Put logstash config for nginx
+  copy: src=files/logstash/nginx.conf dest=/etc/logstash/conf.d/
+
+- name: open ports
+  firewalld:
+    port: "{{ item }}"
+    immediate: yes
+    permanent: true
+    state: enabled
+  loop:
+    - 5044/tcp
+    - 9200/tcp
+    - 9600/tcp
+
+- name: start ELK services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - elasticsearch
+    - logstash

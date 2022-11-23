@@ -1,0 +1,48 @@
+---
+
+- name: install soft
+  dnf:
+    name: 
+      - nginx
+      - 'http://rpm.ipominov.ru/rpm/filebeat-8.4.1-x86_64.rpm'
+      - 'http://rpm.ipominov.ru/rpm/prometheus-nginxlog-exporter_1.9.2_linux_amd64.rpm'
+      - 'http://rpm.ipominov.ru/rpm/golang-github-prometheus-node_exporter-0.18.1-6.el7.x86_64.rpm'
+    state: present
+    disable_gpg_check: yes
+
+- name: Remove index file
+  ansible.builtin.file:
+    path: /usr/share/nginx/html/index.html
+    state: absent
+
+- name: copy site files
+  copy: 
+    src: files/nginx/
+    dest: /usr/share/nginx/html/
+
+- name: make filebeat config from template
+  template:
+    src: filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+
+- name: open nginx ports
+  firewalld:
+    port: "{{ item }}"
+    immediate: yes
+    permanent: true
+    state: enabled
+  loop:
+    - 80/tcp
+    - 9100/tcp
+    - 4040/tcp
+
+- name: start services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - nginx
+    - filebeat
+    - node_exporter
+    - prometheus-nginxlog-exporter

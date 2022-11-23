@@ -1,0 +1,13 @@
+h1.redblock {
+	display: block;
+	border-top: 2px solid red;
+	border-bottom: 2px solid red;
+	font-family: 'Times New Roman', Times, serif;
+	font-size: 30px;
+	line-height: 45px;
+	max-width: 1000px;
+}
+p {
+    font-family: 'Times New Roman', Times, serif;
+	font-size: 30px;
+}

@@ -1,0 +1,13 @@
+---
+
+- hosts: elastic
+  name: Gather facts from elastic
+  tasks: [ ]
+
+- hosts: kibana
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - kibana

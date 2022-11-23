@@ -1,0 +1,13 @@
+---
+
+- hosts: prometheus:kibana:grafana
+  name: gather facts
+  tasks: [ ]
+
+- hosts: bastion
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - bastion

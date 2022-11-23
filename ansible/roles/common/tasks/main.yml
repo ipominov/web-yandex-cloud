@@ -1,0 +1,25 @@
+---
+
+- name: set selinux permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: install some soft
+  dnf:
+    name: 
+      - nano
+      - tar
+      - chrony
+      - firewalld
+      - epel-release
+    state: present
+    
+- name: start services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - firewalld
+    - chronyd
