@@ -13,8 +13,6 @@ variable "yc_folderid" {
   default = "----------------------"
 }
 
-
-
 variable "yc_zone" {
   type    = string
   default = "ru-central1-a"
