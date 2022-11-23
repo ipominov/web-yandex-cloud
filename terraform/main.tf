@@ -565,8 +565,3 @@ output "internal_ip_address_prometheus" {
 output "internal_ip_address_grafana" {
   value = yandex_compute_instance.grafana.network_interface.0.ip_address
 }
-
-#resource "local_file" "hosts" {
-#    content  = "foo!"
-#    filename = "../ansible/hosts.txt"
-#}
