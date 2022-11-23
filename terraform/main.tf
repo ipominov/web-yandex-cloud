@@ -37,7 +37,7 @@ resource "yandex_compute_instance" "bastion" {
     subnet_id = yandex_vpc_subnet.subnet-bastion.id
     security_group_ids = [yandex_vpc_security_group.bastionsg.id]
     nat       = true
-    nat_ip_address     = "158.160.34.197"
+    nat_ip_address     = "${var.yc_bastion-ip}"
   }
   metadata = {
     user-data = "${file("./meta.txt")}"
