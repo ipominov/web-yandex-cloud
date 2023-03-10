@@ -239,21 +239,21 @@ resource "yandex_compute_instance" "grafana" {
 
 # СЕТИ И ПОДСЕТИ---------------------------------------------------------
 
-resource "yandex_vpc_network" "network-netology" {
+resource "yandex_vpc_network" "network-web" {
   name = "all-net"
 }
 
 resource "yandex_vpc_subnet" "subnet-bastion" {
   name           = "sbn-bastion"
   zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.network-netology.id
+  network_id     = yandex_vpc_network.network-web.id
   v4_cidr_blocks = ["192.168.9.0/24"]
 }
 
 resource "yandex_vpc_subnet" "subnet-public" {
   name           = "sbn-public"
   zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.network-netology.id
+  network_id     = yandex_vpc_network.network-web.id
   route_table_id = yandex_vpc_route_table.rt-main.id
   v4_cidr_blocks = ["192.168.10.0/24"]
 }
@@ -261,7 +261,7 @@ resource "yandex_vpc_subnet" "subnet-public" {
 resource "yandex_vpc_subnet" "subnet-nginx-one" {
   name           = "sbn-nginx-1"
   zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.network-netology.id
+  network_id     = yandex_vpc_network.network-web.id
   route_table_id = yandex_vpc_route_table.rt-main.id
   v4_cidr_blocks = ["192.168.11.0/24"]
 }
@@ -269,7 +269,7 @@ resource "yandex_vpc_subnet" "subnet-nginx-one" {
 resource "yandex_vpc_subnet" "subnet-nginx-two" {
   name           = "sbn-nginx-2"
   zone           = "ru-central1-b"
-  network_id     = yandex_vpc_network.network-netology.id
+  network_id     = yandex_vpc_network.network-web.id
   route_table_id = yandex_vpc_route_table.rt-main.id
   v4_cidr_blocks = ["192.168.12.0/24"]
 }
@@ -277,7 +277,7 @@ resource "yandex_vpc_subnet" "subnet-nginx-two" {
 resource "yandex_vpc_subnet" "subnet-elastcisearch" {
   name           = "sbn-elasticsearch"
   zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.network-netology.id
+  network_id     = yandex_vpc_network.network-web.id
   route_table_id = yandex_vpc_route_table.rt-main.id
   v4_cidr_blocks = ["192.168.13.0/24"]
 }
@@ -285,7 +285,7 @@ resource "yandex_vpc_subnet" "subnet-elastcisearch" {
 resource "yandex_vpc_subnet" "subnet-prometheus" {
   name           = "sbn-prometheus"
   zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.network-netology.id
+  network_id     = yandex_vpc_network.network-web.id
   route_table_id = yandex_vpc_route_table.rt-main.id
   v4_cidr_blocks = ["192.168.14.0/24"]
 }
@@ -295,7 +295,7 @@ resource "yandex_vpc_subnet" "subnet-prometheus" {
 resource "yandex_vpc_security_group" "bastionsg" {
   name        = "bastion-sg"
   description = "SG for bastion"
-  network_id  = "${yandex_vpc_network.network-netology.id}"
+  network_id  = "${yandex_vpc_network.network-web.id}"
   ingress {
     protocol       = "TCP"
     description    = "All in"
@@ -311,7 +311,7 @@ resource "yandex_vpc_security_group" "bastionsg" {
 resource "yandex_vpc_security_group" "publicsg" {
   name        = "public-sg"
   description = "SG for bastion"
-  network_id  = "${yandex_vpc_network.network-netology.id}"
+  network_id  = "${yandex_vpc_network.network-web.id}"
   ingress {
     protocol       = "TCP"
     description    = "SSH from bastion"
@@ -340,7 +340,7 @@ resource "yandex_vpc_security_group" "publicsg" {
 resource "yandex_vpc_security_group" "nginxsg" {
   name        = "nginx-sg"
   description = "SG for nginx"
-  network_id  = "${yandex_vpc_network.network-netology.id}"
+  network_id  = "${yandex_vpc_network.network-web.id}"
   ingress {
     protocol       = "TCP"
     description    = "SSH from bastion"
@@ -375,7 +375,7 @@ resource "yandex_vpc_security_group" "nginxsg" {
 resource "yandex_vpc_security_group" "elasticsg" {
   name        = "elastic-sg"
   description = "SG for elastic and logstash"
-  network_id  = "${yandex_vpc_network.network-netology.id}"
+  network_id  = "${yandex_vpc_network.network-web.id}"
   ingress {
     protocol       = "TCP"
     description    = "SSH from bastion"
@@ -404,7 +404,7 @@ resource "yandex_vpc_security_group" "elasticsg" {
 resource "yandex_vpc_security_group" "prometheussg" {
   name        = "prometheus-sg"
   description = "SG for prometheus"
-  network_id  = "${yandex_vpc_network.network-netology.id}"
+  network_id  = "${yandex_vpc_network.network-web.id}"
   ingress {
     protocol       = "TCP"
     description    = "SSH from bastion"
@@ -447,8 +447,8 @@ resource "yandex_alb_target_group" "nginxtarget" {
   }
 }
 
-resource "yandex_alb_backend_group" "netology-backend-group" {
-  name                     = "netology-bg"
+resource "yandex_alb_backend_group" "web-backend-group" {
+  name                     = "web-bg"
 
   http_backend {
     name                   = "nginx-backend"
@@ -470,9 +470,9 @@ resource "yandex_alb_backend_group" "netology-backend-group" {
   }
 }
 
-resource "yandex_alb_load_balancer" "netology-balancer" {
+resource "yandex_alb_load_balancer" "web-balancer" {
   name        = "nginx-balance"
-  network_id  = yandex_vpc_network.network-netology.id
+  network_id  = yandex_vpc_network.network-web.id
 
   allocation_policy {
     location {
@@ -497,13 +497,13 @@ resource "yandex_alb_load_balancer" "netology-balancer" {
     }
     http {
       handler {
-        http_router_id = yandex_alb_http_router.netology-router.id
+        http_router_id = yandex_alb_http_router.web-router.id
       }
     }
   }
 }
 
-resource "yandex_alb_http_router" "netology-router" {
+resource "yandex_alb_http_router" "web-router" {
   name   = "netology-rt"
   labels = {
     tf-label    = "tf-label-value1"
@@ -513,12 +513,12 @@ resource "yandex_alb_http_router" "netology-router" {
 
 resource "yandex_alb_virtual_host" "router-vh" {
   name           = "router-vh"
-  http_router_id = yandex_alb_http_router.netology-router.id
+  http_router_id = yandex_alb_http_router.web-router.id
   route {
     name = "nginx-rt"
     http_route {
       http_route_action {
-        backend_group_id = yandex_alb_backend_group.netology-backend-group.id
+        backend_group_id = yandex_alb_backend_group.web-backend-group.id
         timeout          = "3s"
       }
     }
@@ -534,7 +534,7 @@ resource "yandex_vpc_gateway" "nat_gateway" {
 
 resource "yandex_vpc_route_table" "rt-main" {
   name       = "main-route-table"
-  network_id = yandex_vpc_network.network-netology.id
+  network_id = yandex_vpc_network.network-web.id
 
   static_route {
     destination_prefix = "0.0.0.0/0"
